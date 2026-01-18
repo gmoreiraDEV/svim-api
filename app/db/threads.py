@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Optional, List, Tuple
+from uuid import UUID
 
 from psycopg import AsyncConnection
 
@@ -56,8 +57,8 @@ async def list_threads(limit: int = 50) -> List[Tuple[str, str]]:
             return [(r[0], r[1]) for r in rows]
 
 
-async def list_threads_by_customer_profile(
-    customer_profile: int,
+async def list_threads_by_user_id(
+    user_id: UUID,
     limit: int = 50,
 ) -> List[Tuple[str, str]]:
     pool = get_pool()
@@ -68,27 +69,27 @@ async def list_threads_by_customer_profile(
                 select thread_id,
                        to_char(created_at at time zone 'utc', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as created
                   from threads
-                 where customer_profile = %s
+                 where user_id = %s
                  order by created_at desc
                  limit %s
                 """,
-                (customer_profile, limit),
+                (str(user_id), limit),
             )
             rows = await cur.fetchall()
             return [(r[0], r[1]) for r in rows]
 
 
-async def update_thread_customer_profile(thread_id: str, customer_profile: int) -> bool:
+async def update_thread_user_id(thread_id: str, user_id: UUID) -> bool:
     pool = get_pool()
     async with pool.connection() as conn:
         async with conn.cursor() as cur:
             await cur.execute(
                 """
                 update threads
-                   set customer_profile = %s
+                   set user_id = %s
                  where thread_id = %s
                 """,
-                (customer_profile, thread_id),
+                (str(user_id), thread_id),
             )
             updated = cur.rowcount or 0
             await conn.commit()

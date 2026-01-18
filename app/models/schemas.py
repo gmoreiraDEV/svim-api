@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+from uuid import UUID
 
 from pydantic import BaseModel, Field
 
@@ -36,13 +37,16 @@ class ThreadSearchRequest(BaseModel):
 # ---------- User Profiles ----------
 
 class UserProfileCreate(BaseModel):
-    customer_profile: int
+    stack_user_id: Optional[UUID] = None
+    customer_profile: Optional[int] = None
     name: Optional[str] = None
     phone: Optional[str] = None
 
 
 class UserProfileObj(BaseModel):
-    customer_profile: int
+    id: UUID
+    stack_user_id: Optional[UUID] = None
+    customer_profile: Optional[int] = None
     name: Optional[str] = None
     phone: Optional[str] = None
     created_at: Optional[datetime] = None

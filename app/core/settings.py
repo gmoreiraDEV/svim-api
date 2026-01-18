@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     allow_origins_raw: str = Field(default="*", alias="ALLOW_ORIGINS")
     allow_credentials: bool = Field(default=False, alias="ALLOW_CREDENTIALS")
 
+    # Auth
+    n8n_api_key: str = Field(..., alias="N8N_API_KEY")
+    auth_bypass_health: bool = Field(default=True, alias="AUTH_BYPASS_HEALTH")
+
     # Database
     database_url: str = Field(..., alias="DATABASE_URL")
     db_pool_min_size: int = Field(default=1, alias="DB_POOL_MIN_SIZE")

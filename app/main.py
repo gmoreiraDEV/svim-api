@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.responses import JSONResponse
 
 from app.core.settings import get_settings
 
@@ -63,6 +64,17 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    @app.middleware("http")
+    async def api_key_auth(request: Request, call_next):
+        if settings.auth_bypass_health and request.url.path == "/health":
+            return await call_next(request)
+
+        api_key = request.headers.get("X-API-Key")
+        if not api_key or api_key != settings.n8n_api_key:
+            return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+
+        return await call_next(request)
+
     app.include_router(health.router)
     app.include_router(threads.router)
     app.include_router(user_profiles.router)
@@ -70,4 +82,3 @@ def create_app() -> FastAPI:
     return app
 
 app = create_app()
-
