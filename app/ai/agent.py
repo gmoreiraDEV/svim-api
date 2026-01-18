@@ -11,8 +11,9 @@ from langchain_core.tools import BaseTool
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.base import BaseCheckpointSaver
 
-from ai.middleware import DynamicSettingsMiddleware
-from ai.tools import tavily_search
+from app.ai.middleware import DynamicSettingsMiddleware
+from app.ai.prompts import render_default_system_prompt
+from app.ai.tools import tavily_search
 
 
 def _sp_today_str() -> str:
@@ -24,15 +25,17 @@ class AgentConfig:
     # Logs
     debug_agent_logs: bool = False
 
-    # Provider (OpenRouter via compat OpenAI)
-    openrouter_api_key: str = ""
-    openrouter_base_url: str = "https://openrouter.ai/api/v1"
+    # Provider (OpenAI-compatible)
+    provider_name: str = "openrouter"
+    api_key: str = ""
+    base_url: str = "https://openrouter.ai/api/v1"
 
     # Defaults (com override do Studio aplicado antes de criar o config)
     default_model_name: str = "google/gemini-2.5-flash"
     default_use_tavily: bool = False
     default_system_prompt: str = ""
     temperature: float = 0.2
+    max_output_tokens: int = 2048
 
     # Summarization
     summary_model_name: str = "google/gemini-2.0-flash-001"
@@ -41,11 +44,7 @@ class AgentConfig:
 
     @staticmethod
     def default_prompt() -> str:
-        return (
-            f"Você é um copiloto que auxilia o time. Hoje é {_sp_today_str()} (fuso de São Paulo). "
-            "Quando perguntarem a data de hoje, responda usando essa data de forma direta. "
-            "Se pedirem a hora exata, responda que só dispõe da data."
-        )
+        return render_default_system_prompt(today=_sp_today_str())
 
 
 def _dbg(cfg: AgentConfig, *args) -> None:
@@ -86,16 +85,17 @@ def create_agent_graph(
     """
     Factory: monta e retorna o agente (Runnable) pronto para LangGraph.
     """
-    if not cfg.openrouter_api_key:
-        raise RuntimeError("OPENROUTER_API_KEY não definido (AgentConfig.openrouter_api_key).")
+    if not cfg.api_key:
+        raise RuntimeError(f"API key do provedor '{cfg.provider_name}' não definida.")
 
     agent_tools = _ensure_tools(tools)
 
     llm = ChatOpenAI(
         model=model_name,
         temperature=cfg.temperature if temperature is None else temperature,
-        openai_api_key=cfg.openrouter_api_key,
-        openai_api_base=cfg.openrouter_base_url,
+        openai_api_key=cfg.api_key,
+        openai_api_base=cfg.base_url,
+        max_tokens=cfg.max_output_tokens,
     )
 
     _dbg(cfg, f"[AGENT] model={model_name} use_tavily={use_tavily} tools={len(agent_tools)}")
@@ -106,8 +106,9 @@ def create_agent_graph(
             model=ChatOpenAI(
                 model=cfg.summary_model_name,
                 temperature=0.0,
-                openai_api_key=cfg.openrouter_api_key,
-                openai_api_base=cfg.openrouter_base_url,
+                openai_api_key=cfg.api_key,
+                openai_api_base=cfg.base_url,
+                max_tokens=cfg.max_output_tokens,
             ),
             max_tokens_before_summary=cfg.max_tokens_before_summary,
             messages_to_keep=cfg.messages_to_keep,

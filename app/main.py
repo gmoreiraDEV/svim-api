@@ -12,7 +12,7 @@ from app.db.migrator import run_migrations
 
 from app.services.graph import build_agent_graph, open_checkpointer
 
-from app.api.routers import health, threads
+from app.api.routers import health, threads, user_profiles
 
 from app.core.logging import configure_logging
 
@@ -65,9 +65,9 @@ def create_app() -> FastAPI:
 
     app.include_router(health.router)
     app.include_router(threads.router)
+    app.include_router(user_profiles.router)
 
     return app
 
 app = create_app()
-
 

@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 import json
-from typing import Callable, Optional, Tuple, List, Any
+from typing import Callable, Optional, Tuple, List, Any, TYPE_CHECKING
 
 from langchain.agents.middleware import AgentMiddleware, ModelRequest, ModelResponse
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, ToolMessage
 
-from ai.agent import AgentConfig
-from ai.tools import tavily_search
+from app.ai.tools import tavily_search
+
+if TYPE_CHECKING:
+    from app.ai.agent import AgentConfig
 
 
 def _dbg(cfg: AgentConfig, *args) -> None:
@@ -143,8 +145,9 @@ class DynamicSettingsMiddleware(AgentMiddleware):
                 new_model = ChatOpenAI(
                     model=model_name,
                     temperature=self.cfg.temperature,
-                    openai_api_key=self.cfg.openrouter_api_key,
-                    openai_api_base=self.cfg.openrouter_base_url,
+                    openai_api_key=self.cfg.api_key,
+                    openai_api_base=self.cfg.base_url,
+                    max_tokens=self.cfg.max_output_tokens,
                 )
             except Exception as e:
                 _dbg(self.cfg, f"[SETTINGS] erro ao aplicar modelo '{model_name}': {e}")

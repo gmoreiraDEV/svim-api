@@ -44,8 +44,15 @@ class Settings(BaseSettings):
     studio_model_name: Optional[str] = Field(default=None, alias="STUDIO_MODEL_NAME")
     studio_use_tavily: Optional[bool] = Field(default=None, alias="STUDIO_USE_TAVILY")
 
-    openrouter_api_key: str = Field(..., alias="OPENROUTER_API_KEY")
+    use_openrouter: bool = Field(default=True, alias="USE_OPENROUTER")
+
+    openrouter_api_key: Optional[str] = Field(default=None, alias="OPENROUTER_API_KEY")
     openrouter_base_url: str = Field(default="https://openrouter.ai/api/v1", alias="OPENROUTER_BASE_URL")
+
+    openai_api_key: Optional[str] = Field(default=None, alias="OPENAI_API_KEY")
+    openai_base_url: str = Field(default="https://api.openai.com/v1", alias="OPENAI_BASE_URL")
+
+    openrouter_max_tokens: int = Field(default=2048, alias="OPENROUTER_MAX_TOKENS")
 
     tavily_api_key: Optional[str] = Field(default=None, alias="TAVILY_API_KEY")
 

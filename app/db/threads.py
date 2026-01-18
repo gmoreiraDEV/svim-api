@@ -54,3 +54,42 @@ async def list_threads(limit: int = 50) -> List[Tuple[str, str]]:
             )
             rows = await cur.fetchall()
             return [(r[0], r[1]) for r in rows]
+
+
+async def list_threads_by_customer_profile(
+    customer_profile: int,
+    limit: int = 50,
+) -> List[Tuple[str, str]]:
+    pool = get_pool()
+    async with pool.connection() as conn:
+        async with conn.cursor() as cur:
+            await cur.execute(
+                """
+                select thread_id,
+                       to_char(created_at at time zone 'utc', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as created
+                  from threads
+                 where customer_profile = %s
+                 order by created_at desc
+                 limit %s
+                """,
+                (customer_profile, limit),
+            )
+            rows = await cur.fetchall()
+            return [(r[0], r[1]) for r in rows]
+
+
+async def update_thread_customer_profile(thread_id: str, customer_profile: int) -> bool:
+    pool = get_pool()
+    async with pool.connection() as conn:
+        async with conn.cursor() as cur:
+            await cur.execute(
+                """
+                update threads
+                   set customer_profile = %s
+                 where thread_id = %s
+                """,
+                (customer_profile, thread_id),
+            )
+            updated = cur.rowcount or 0
+            await conn.commit()
+            return updated > 0

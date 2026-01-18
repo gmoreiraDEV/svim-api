@@ -33,6 +33,26 @@ class ThreadSearchRequest(BaseModel):
     limit: Optional[int] = 50
 
 
+# ---------- User Profiles ----------
+
+class UserProfileCreate(BaseModel):
+    customer_profile: int
+    name: Optional[str] = None
+    phone: Optional[str] = None
+
+
+class UserProfileObj(BaseModel):
+    customer_profile: int
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+
+class UserProfileThreadUpdate(BaseModel):
+    thread_id: str
+
+
 # ---------- Runs ----------
 
 class RunRequest(BaseModel):
