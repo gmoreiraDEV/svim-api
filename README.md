@@ -91,16 +91,19 @@ Cria/atualiza um perfil (upsert).
 }
 ```
 
-- `GET /user-profiles/{customer_profile}`  
+- `GET /user-profiles/{user_id}`  
 Lê um perfil.
 
-- `PATCH /user-profiles/{customer_profile}/thread`  
+- `GET /user-profiles/by-provider-id?stack_user_id=...&customer_profile=...`  
+Busca um perfil por `stack_user_id` e/ou `customer_profile` (ao menos um é obrigatório).
+
+- `PATCH /user-profiles/{user_id}/thread`  
 Vincula uma thread ao perfil.
 ```json
 { "thread_id": "45d67d68-31f5-4a11-b437-9610dc6a00b4" }
 ```
 
-- `GET /user-profiles/{customer_profile}/threads?limit=50`  
+- `GET /user-profiles/{user_id}/threads?limit=50`  
 Lista threads associadas a um perfil.
 
 ## ⚙️ Deploy

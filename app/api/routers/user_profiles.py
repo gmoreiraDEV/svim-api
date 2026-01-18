@@ -76,6 +76,31 @@ async def read_user_profile(user_id: UUID) -> UserProfileObj:
     return _row_to_obj(row)
 
 
+@router.get("/user-profiles/by-provider-id", response_model=UserProfileObj)
+async def read_user_profile_by_provider_id(
+    stack_user_id: UUID | None = None,
+    customer_profile: int | None = None,
+) -> UserProfileObj:
+    if stack_user_id is None and customer_profile is None:
+        raise HTTPException(status_code=400, detail="stack_user_id ou customer_profile é obrigatório")
+
+    by_stack = None
+    by_customer = None
+    if stack_user_id is not None:
+        by_stack = await get_user_profile_by_stack_user_id(stack_user_id)
+    if customer_profile is not None:
+        by_customer = await get_user_profile_by_customer_profile(customer_profile)
+
+    if by_stack and by_customer and by_stack[0] != by_customer[0]:
+        raise HTTPException(status_code=409, detail="stack_user_id e customer_profile pertencem a usuários diferentes")
+
+    row = by_stack or by_customer
+    if not row:
+        raise HTTPException(status_code=404, detail="User profile not found")
+
+    return _row_to_obj(row)
+
+
 @router.patch("/user-profiles/{user_id}/thread", response_model=UserProfileObj)
 async def update_user_profile_thread(
     user_id: UUID,
