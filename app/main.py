@@ -4,6 +4,8 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.utils import get_openapi
+from fastapi.security.api_key import APIKeyHeader
 from starlette.responses import JSONResponse
 
 from app.core.settings import get_settings
@@ -55,6 +57,25 @@ def create_app() -> FastAPI:
 
     app = FastAPI(title=settings.title, version=settings.version, lifespan=lifespan)
 
+    api_key_scheme = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+    def custom_openapi():
+        if app.openapi_schema:
+            return app.openapi_schema
+        openapi_schema = get_openapi(
+            title=app.title,
+            version=app.version,
+            routes=app.routes,
+        )
+        openapi_schema.setdefault("components", {}).setdefault("securitySchemes", {})[
+            "ApiKeyAuth"
+        ] = {"type": "apiKey", "in": "header", "name": "X-API-Key"}
+        openapi_schema.setdefault("security", []).append({"ApiKeyAuth": []})
+        app.openapi_schema = openapi_schema
+        return app.openapi_schema
+
+    app.openapi = custom_openapi
+
     # CORS
     app.add_middleware(
         CORSMiddleware,
@@ -66,7 +87,10 @@ def create_app() -> FastAPI:
 
     @app.middleware("http")
     async def api_key_auth(request: Request, call_next):
-        if settings.auth_bypass_health and request.url.path == "/health":
+        public_paths = {"/health", "/docs", "/openapi.json", "/redoc"}
+        if request.url.path.startswith("/docs"):
+            return await call_next(request)
+        if settings.auth_bypass_health and request.url.path in public_paths:
             return await call_next(request)
 
         api_key = request.headers.get("X-API-Key")
