@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     env: str = Field(default="development", alias="ENV")
 
     # API
-    title: str = Field(default="AI REVENUE MACHINE", alias="APP_TITLE")
+    title: str = Field(default="SVIM API", alias="APP_TITLE")
     version: str = Field(default="0.1.0", alias="APP_VERSION")
 
     # CORS

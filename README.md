@@ -1,4 +1,4 @@
-# AI Revenue Machine API
+# SVIM API
 
 API em FastAPI para criação de threads, execução do agente LLM via LangGraph e gestão de user profiles.
 
