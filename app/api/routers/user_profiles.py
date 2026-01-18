@@ -68,14 +68,6 @@ async def create_user_profile(body: UserProfileCreate) -> UserProfileObj:
     return _row_to_obj(row)
 
 
-@router.get("/user-profiles/{user_id}", response_model=UserProfileObj)
-async def read_user_profile(user_id: UUID) -> UserProfileObj:
-    row = await get_user_profile_by_id(user_id)
-    if not row:
-        raise HTTPException(status_code=404, detail="User profile not found")
-    return _row_to_obj(row)
-
-
 @router.get("/user-profiles/by-provider-id", response_model=UserProfileObj)
 async def read_user_profile_by_provider_id(
     stack_user_id: UUID | None = None,
@@ -98,6 +90,14 @@ async def read_user_profile_by_provider_id(
     if not row:
         raise HTTPException(status_code=404, detail="User profile not found")
 
+    return _row_to_obj(row)
+
+
+@router.get("/user-profiles/{user_id}", response_model=UserProfileObj)
+async def read_user_profile(user_id: UUID) -> UserProfileObj:
+    row = await get_user_profile_by_id(user_id)
+    if not row:
+        raise HTTPException(status_code=404, detail="User profile not found")
     return _row_to_obj(row)
 
 
