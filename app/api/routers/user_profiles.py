@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException
 
 from app.db.threads import list_threads_by_user_id, update_thread_user_id
 from app.db.user_profiles import (
-    create_user_profile,
+    create_user_profile as db_create_user_profile,
     get_user_profile_by_customer_profile,
     get_user_profile_by_id,
     get_user_profile_by_stack_user_id,
@@ -59,7 +59,7 @@ async def create_user_profile(body: UserProfileCreate) -> UserProfileObj:
             raise HTTPException(status_code=500, detail="Failed to update user profile")
         return _row_to_obj(updated)
 
-    row = await create_user_profile(
+    row = await db_create_user_profile(
         stack_user_id=body.stack_user_id,
         customer_profile=body.customer_profile,
         name=body.name,
