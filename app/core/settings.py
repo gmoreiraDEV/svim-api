@@ -43,10 +43,8 @@ class Settings(BaseSettings):
     debug_agent_logs: bool = Field(default=False, alias="DEBUG_AGENT_LOGS")
 
     default_model_name: str = Field(default="google/gemini-2.5-flash", alias="DEFAULT_MODEL_NAME")
-    default_use_tavily: bool = Field(default=False, alias="DEFAULT_USE_TAVILY")
 
     studio_model_name: Optional[str] = Field(default=None, alias="STUDIO_MODEL_NAME")
-    studio_use_tavily: Optional[bool] = Field(default=None, alias="STUDIO_USE_TAVILY")
 
     use_openrouter: bool = Field(default=True, alias="USE_OPENROUTER")
 
@@ -57,9 +55,6 @@ class Settings(BaseSettings):
     openai_base_url: str = Field(default="https://api.openai.com/v1", alias="OPENAI_BASE_URL")
 
     openrouter_max_tokens: int = Field(default=2048, alias="OPENROUTER_MAX_TOKENS")
-
-    tavily_api_key: Optional[str] = Field(default=None, alias="TAVILY_API_KEY")
-
 
     @property
     def allow_origins(self) -> List[str]:
@@ -73,10 +68,6 @@ class Settings(BaseSettings):
     @property
     def effective_model_name(self) -> str:
         return self.studio_model_name or self.default_model_name
-
-    @property
-    def effective_use_tavily(self) -> bool:
-        return self.default_use_tavily if self.studio_use_tavily is None else self.studio_use_tavily
 
     @field_validator("allow_credentials")
     @classmethod

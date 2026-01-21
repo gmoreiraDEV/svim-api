@@ -20,13 +20,13 @@ class HttpClient:
     """HTTP client com configuração fixa e validações de segurança."""
 
     def __init__(self) -> None:
-        base_url = os.getenv("URL_BASE", "").rstrip("/")
+        base_url = os.getenv("TRINKS_API_URL", "").rstrip("/")
         if not base_url:
-            raise ValueError("URL_BASE não definida para o cliente HTTP da SVIM")
+            raise ValueError("TRINKS_API_URL não definida para o cliente HTTP da SVIM")
         self.base_url = base_url
 
         self.headers = {
-            "X-Api-Key": os.getenv("X_API_TOKEN", ""),
+            "X-Api-Key": os.getenv("TRINKS_X_API_TOKEN", ""),
             "Accept": "application/json",
             "Content-Type": "application/json",
             "estabelecimentoId": os.getenv("ESTABELECIMENTO_ID", ""),

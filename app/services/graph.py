@@ -7,6 +7,14 @@ from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
 from app.core.settings import get_settings
 from app.ai.agent import AgentConfig, build_graph
+from app.ai.tools import (
+    consultar_disponibilidade_tool,
+    criar_agendamento_tool,
+    listar_agendamentos_tool,
+    listar_profissionais_tool,
+    listar_servicos_profissional_tool,
+    listar_servicos_tool,
+)
 
 
 def build_agent_graph(checkpointer: BaseCheckpointSaver):
@@ -22,9 +30,16 @@ def build_agent_graph(checkpointer: BaseCheckpointSaver):
         base_url=base_url,
         max_output_tokens=settings.openrouter_max_tokens,
         default_model_name=settings.effective_model_name,
-        default_use_tavily=settings.effective_use_tavily,
     )
-    return build_graph(cfg=cfg, checkpointer=checkpointer)
+    tools = [
+        consultar_disponibilidade_tool,
+        criar_agendamento_tool,
+        listar_agendamentos_tool,
+        listar_profissionais_tool,
+        listar_servicos_profissional_tool,
+        listar_servicos_tool,
+    ]
+    return build_graph(cfg=cfg, checkpointer=checkpointer, tools=tools)
 
 
 async def open_checkpointer(database_url: str) -> tuple[AsyncExitStack, AsyncPostgresSaver]:

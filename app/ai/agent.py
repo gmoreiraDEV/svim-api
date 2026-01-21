@@ -13,7 +13,6 @@ from langgraph.checkpoint.base import BaseCheckpointSaver
 
 from app.ai.middleware import DynamicSettingsMiddleware
 from app.ai.prompts import render_default_system_prompt
-from app.ai.tools import tavily_search
 
 
 def _sp_today_str() -> str:
@@ -32,7 +31,6 @@ class AgentConfig:
 
     # Defaults (com override do Studio aplicado antes de criar o config)
     default_model_name: str = "google/gemini-2.5-flash"
-    default_use_tavily: bool = False
     default_system_prompt: str = ""
     temperature: float = 0.2
     max_output_tokens: int = 2048
@@ -55,29 +53,11 @@ def _dbg(cfg: AgentConfig, *args) -> None:
             pass
 
 
-def _ensure_tools(
-    tools: Optional[Iterable[BaseTool]],
-) -> List[BaseTool]:
-    """
-    Mantém o comportamento seguro: sempre registrar tavily_search
-    para evitar 'unknown tool' mesmo quando não for usado.
-    """
-    final_tools: List[BaseTool] = list(tools or [])
-    try:
-        has = any(getattr(t, "name", None) == getattr(tavily_search, "name", "tavily_search") for t in final_tools)
-        if not has:
-            final_tools.append(tavily_search)
-    except Exception:
-        final_tools.append(tavily_search)
-    return final_tools
-
-
 def create_agent_graph(
     *,
     cfg: AgentConfig,
     model_name: str,
     system_prompt: str,
-    use_tavily: bool,
     tools: Optional[Iterable[BaseTool]] = None,
     temperature: Optional[float] = None,
     checkpointer: Optional[BaseCheckpointSaver] = None,
@@ -88,7 +68,7 @@ def create_agent_graph(
     if not cfg.api_key:
         raise RuntimeError(f"API key do provedor '{cfg.provider_name}' não definida.")
 
-    agent_tools = _ensure_tools(tools)
+    agent_tools: List[BaseTool] = list(tools or [])
 
     llm = ChatOpenAI(
         model=model_name,
@@ -98,7 +78,7 @@ def create_agent_graph(
         max_tokens=cfg.max_output_tokens,
     )
 
-    _dbg(cfg, f"[AGENT] model={model_name} use_tavily={use_tavily} tools={len(agent_tools)}")
+    _dbg(cfg, f"[AGENT] model={model_name} tools={len(agent_tools)}")
 
     middlewares = [
         DynamicSettingsMiddleware(cfg),
@@ -130,7 +110,6 @@ def build_graph(
     cfg: AgentConfig,
     model_name: Optional[str] = None,
     system_prompt: Optional[str] = None,
-    use_tavily: Optional[bool] = None,
     tools: Optional[Iterable[BaseTool]] = None,
     temperature: Optional[float] = None,
     checkpointer: Optional[BaseCheckpointSaver] = None,
@@ -140,13 +119,10 @@ def build_graph(
     """
     final_model = model_name or cfg.default_model_name
     final_prompt = system_prompt or (cfg.default_system_prompt or AgentConfig.default_prompt())
-    final_use_tavily = cfg.default_use_tavily if use_tavily is None else use_tavily
-
     return create_agent_graph(
         cfg=cfg,
         model_name=final_model,
         system_prompt=final_prompt,
-        use_tavily=final_use_tavily,
         tools=tools,
         temperature=temperature,
         checkpointer=checkpointer,
